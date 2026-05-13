@@ -7,17 +7,13 @@ interface ComparisonPanelProps {
   data: CompareResult;
 }
 
-const ALGO_LABELS: Record<string, string> = {
-  dijkstra: "Dijkstra",
-  bfs: "BFS",
-  brute_force: "Brute Force",
+const META: Record<string, { label: string; color: string; dim: string }> = {
+  dijkstra: { label: "Dijkstra", color: "#ffffff", dim: "rgba(255,255,255,0.08)" },
+  bfs: { label: "BFS", color: "#3ecfb4", dim: "rgba(62,207,180,0.1)" },
+  brute_force: { label: "Brute Force", color: "#ef5350", dim: "rgba(239,83,80,0.1)" },
 };
 
-const ALGO_COLORS: Record<string, string> = {
-  dijkstra: "#f59e0b",
-  brute_force: "#ef4444",
-  bfs: "#14b8a6",
-};
+const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function ComparisonPanel({ data }: ComparisonPanelProps) {
   const algos = Object.keys(data) as (keyof CompareResult)[];
@@ -25,30 +21,32 @@ export default function ComparisonPanel({ data }: ComparisonPanelProps) {
   const maxDist = Math.max(...algos.map((a) => data[a].distance_km));
 
   return (
-    <div className="space-y-6">
-      <h3 className="text-xs tracking-widest text-amber-500 uppercase font-display">
+    <div className="space-y-8">
+      <p className="text-[13px] font-bold tracking-wide" style={{ color: "var(--w70)" }}>
         Algorithm Comparison
-      </h3>
+      </p>
 
-      {/* Time comparison */}
+      {/* Execution Time */}
       <div>
-        <p className="text-xs text-paper/40 mb-3 font-mono">Execution Time (ms)</p>
-        <div className="space-y-2">
+        <p className="text-[10px] font-semibold tracking-[0.12em] uppercase mb-4" style={{ color: "var(--w30)" }}>
+          Execution Time
+        </p>
+        <div className="space-y-3">
           {algos.map((algo, i) => {
             const pct = maxTime > 0 ? (data[algo].execution_time_ms / maxTime) * 100 : 0;
+            const m = META[algo];
             return (
-              <div key={algo} className="flex items-center gap-3">
-                <span className="text-xs font-mono w-24 text-paper/60">{ALGO_LABELS[algo]}</span>
-                <div className="flex-1 h-6 bg-white/5 rounded overflow-hidden">
+              <div key={algo} className="flex items-center gap-4">
+                <span className="text-[11px] font-semibold w-24 shrink-0" style={{ color: m.color }}>{m.label}</span>
+                <div className="flex-1 h-7 rounded-md overflow-hidden" style={{ background: "var(--w03)" }}>
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${pct}%` }}
-                    transition={{ duration: 0.8, delay: i * 0.1, ease: "easeOut" }}
-                    className="h-full rounded flex items-center px-2"
-                    style={{ background: ALGO_COLORS[algo] + "40", borderLeft: `2px solid ${ALGO_COLORS[algo]}` }}
-                  >
-                    <span className="text-xs font-mono" style={{ color: ALGO_COLORS[algo] }}>
-                      {data[algo].execution_time_ms.toFixed(4)}ms
+                    animate={{ width: `${Math.max(pct, 4)}%` }}
+                    transition={{ duration: 0.9, delay: i * 0.12, ease }}
+                    className="h-full rounded-md flex items-center px-3"
+                    style={{ background: `linear-gradient(90deg, ${m.dim}, transparent)`, borderLeft: `2px solid ${m.color}` }}>
+                    <span className="text-[10px] font-medium whitespace-nowrap" style={{ color: m.color, fontFamily: "var(--font-mono)" }}>
+                      {data[algo].execution_time_ms.toFixed(4)} ms
                     </span>
                   </motion.div>
                 </div>
@@ -58,24 +56,26 @@ export default function ComparisonPanel({ data }: ComparisonPanelProps) {
         </div>
       </div>
 
-      {/* Distance comparison */}
+      {/* Path Distance */}
       <div>
-        <p className="text-xs text-paper/40 mb-3 font-mono">Path Distance (km)</p>
-        <div className="space-y-2">
+        <p className="text-[10px] font-semibold tracking-[0.12em] uppercase mb-4" style={{ color: "var(--w30)" }}>
+          Path Distance
+        </p>
+        <div className="space-y-3">
           {algos.map((algo, i) => {
             const pct = maxDist > 0 ? (data[algo].distance_km / maxDist) * 100 : 0;
+            const m = META[algo];
             return (
-              <div key={algo} className="flex items-center gap-3">
-                <span className="text-xs font-mono w-24 text-paper/60">{ALGO_LABELS[algo]}</span>
-                <div className="flex-1 h-6 bg-white/5 rounded overflow-hidden">
+              <div key={algo} className="flex items-center gap-4">
+                <span className="text-[11px] font-semibold w-24 shrink-0" style={{ color: m.color }}>{m.label}</span>
+                <div className="flex-1 h-7 rounded-md overflow-hidden" style={{ background: "var(--w03)" }}>
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${pct}%` }}
-                    transition={{ duration: 0.8, delay: i * 0.1 + 0.3, ease: "easeOut" }}
-                    className="h-full rounded flex items-center px-2"
-                    style={{ background: ALGO_COLORS[algo] + "40", borderLeft: `2px solid ${ALGO_COLORS[algo]}` }}
-                  >
-                    <span className="text-xs font-mono" style={{ color: ALGO_COLORS[algo] }}>
+                    animate={{ width: `${Math.max(pct, 4)}%` }}
+                    transition={{ duration: 0.9, delay: i * 0.12 + 0.3, ease }}
+                    className="h-full rounded-md flex items-center px-3"
+                    style={{ background: `linear-gradient(90deg, ${m.dim}, transparent)`, borderLeft: `2px solid ${m.color}` }}>
+                    <span className="text-[10px] font-medium whitespace-nowrap" style={{ color: m.color, fontFamily: "var(--font-mono)" }}>
                       {data[algo].distance_km} km
                     </span>
                   </motion.div>
@@ -86,29 +86,28 @@ export default function ComparisonPanel({ data }: ComparisonPanelProps) {
         </div>
       </div>
 
-      {/* Path steps */}
-      <div className="grid grid-cols-3 gap-2">
-        {algos.map((algo) => (
-          <div
-            key={algo}
-            className="rounded-lg p-3 border text-center"
-            style={{ borderColor: ALGO_COLORS[algo] + "40", background: ALGO_COLORS[algo] + "08" }}
-          >
-            <p className="text-xs text-paper/40 mb-1">{ALGO_LABELS[algo]}</p>
-            <p className="text-xl font-display" style={{ color: ALGO_COLORS[algo] }}>
-              {data[algo].hops}
-            </p>
-            <p className="text-xs text-paper/40">hops</p>
-          </div>
-        ))}
+      {/* Hops */}
+      <div className="grid grid-cols-3 gap-3">
+        {algos.map((algo) => {
+          const m = META[algo];
+          return (
+            <div key={algo} className="rounded-xl p-4 text-center"
+              style={{ border: `1px solid ${m.dim}`, background: m.dim }}>
+              <p className="text-[10px] font-medium mb-1" style={{ color: "var(--w30)" }}>{m.label}</p>
+              <p className="text-[1.8rem] font-extrabold leading-none" style={{ color: m.color }}>{data[algo].hops}</p>
+              <p className="text-[9px] mt-1 font-medium" style={{ color: "var(--w30)" }}>hops</p>
+            </div>
+          );
+        })}
       </div>
 
       {/* Verdict */}
-      <div className="rounded-lg border border-amber-500/20 p-4 bg-amber-500/5">
-        <p className="text-xs text-amber-400 font-mono">
-          ▸ Dijkstra guarantees optimal shortest path in O((V+E) log V) time.
-          Brute force explores all paths — exponential for large graphs.
-          BFS finds shortest by hop count, not edge weight.
+      <div className="rounded-xl p-5" style={{ background: "var(--w03)", border: "1px solid var(--w08)" }}>
+        <p className="text-[12px] leading-relaxed" style={{ color: "var(--w50)" }}>
+          <span className="font-bold" style={{ color: "#fff" }}>Dijkstra</span> guarantees the optimal shortest path in{" "}
+          <span className="font-medium" style={{ color: "#fff", fontFamily: "var(--font-mono)", fontSize: 11 }}>O((V+E) log V)</span> time.{" "}
+          <span className="font-bold" style={{ color: "var(--red)" }}>Brute Force</span> exhaustively explores every possible path — exponential cost for larger graphs.{" "}
+          <span className="font-bold" style={{ color: "var(--teal)" }}>BFS</span> finds the path with fewest hops, ignoring edge weights entirely.
         </p>
       </div>
     </div>

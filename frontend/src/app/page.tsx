@@ -14,10 +14,12 @@ import {
 } from "@/lib/api";
 
 const ALGO_OPTIONS = [
-  { value: "dijkstra", label: "Dijkstra", desc: "Optimal shortest path" },
-  { value: "bfs", label: "BFS", desc: "Breadth-first search" },
-  { value: "brute_force", label: "Brute Force", desc: "All paths exhaustive" },
+  { value: "dijkstra", label: "Dijkstra", desc: "Greedy optimal via priority queue", cx: "O((V+E) log V)" },
+  { value: "bfs", label: "BFS", desc: "Hop-count shortest path", cx: "O(V+E)" },
+  { value: "brute_force", label: "Brute Force", desc: "Exhaustive all-paths search", cx: "O(V!)" },
 ];
+
+const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function Home() {
   const [graphData, setGraphData] = useState<GraphData | null>(null);
@@ -33,265 +35,220 @@ export default function Home() {
 
   useEffect(() => {
     fetchGraphData()
-      .then((data) => {
-        setGraphData(data);
-        setSource(data.nodes[0]);
-        setTarget(data.nodes[4]);
-      })
+      .then((d) => { setGraphData(d); setSource(d.nodes[0]); setTarget(d.nodes[4]); })
       .catch(() => setError("Cannot connect to backend. Make sure Flask is running on port 5000."));
   }, []);
 
   async function handleFind() {
-    if (!source || !target || source === target) {
-      setError("Please select different source and destination.");
-      return;
-    }
-    setError("");
-    setLoading(true);
-    setResult(null);
-    setComparison(null);
-    try {
-      const r = await fetchRoute(source, target, algorithm);
-      setResult(r);
-      setTab("map");
-    } catch {
-      setError("Failed to get route. Is the Flask backend running?");
-    } finally {
-      setLoading(false);
-    }
+    if (!source || !target || source === target) { setError("Please select different source and destination."); return; }
+    setError(""); setLoading(true); setResult(null); setComparison(null);
+    try { const r = await fetchRoute(source, target, algorithm); setResult(r); setTab("map"); }
+    catch { setError("Failed to get route. Is the Flask backend running?"); }
+    finally { setLoading(false); }
   }
 
   async function handleCompare() {
-    if (!source || !target || source === target) {
-      setError("Please select different source and destination.");
-      return;
-    }
-    setError("");
-    setComparing(true);
-    setResult(null);
-    setComparison(null);
-    try {
-      const r = await fetchComparison(source, target);
-      setComparison(r);
-      setResult(r.dijkstra);
-      setTab("compare");
-    } catch {
-      setError("Failed to compare routes.");
-    } finally {
-      setComparing(false);
-    }
+    if (!source || !target || source === target) { setError("Please select different source and destination."); return; }
+    setError(""); setComparing(true); setResult(null); setComparison(null);
+    try { const r = await fetchComparison(source, target); setComparison(r); setResult(r.dijkstra); setTab("compare"); }
+    catch { setError("Failed to compare routes."); }
+    finally { setComparing(false); }
   }
 
-  const emptyGraph: GraphData = graphData || { nodes: [], positions: {}, edges: [] };
+  const graph: GraphData = graphData || { nodes: [], positions: {}, edges: [] };
 
   return (
-    <div className="min-h-screen relative overflow-hidden"
-      style={{ background: "radial-gradient(ellipse at 20% 50%, #1a0f00 0%, #0a0a0f 60%)" }}>
+    <div className="relative min-h-screen" style={{ zIndex: 1 }}>
 
-      {/* Background decoration */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #f59e0b, transparent 70%)" }} />
-        <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #14b8a6, transparent 70%)" }} />
-        {/* Dot grid */}
-        <svg className="absolute inset-0 w-full h-full opacity-5">
-          <defs>
-            <pattern id="dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
-              <circle cx="2" cy="2" r="1" fill="#f5f0e8" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#dots)" />
-        </svg>
-      </div>
+      {/* Subtle radial vignette */}
+      <div className="pointer-events-none fixed inset-0" style={{
+        background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,255,255,0.02) 0%, transparent 60%)",
+      }} />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
+      <div className="relative max-w-[1280px] mx-auto px-5 py-10" style={{ zIndex: 2 }}>
 
-        {/* Header */}
+        {/* ════ Header ════ */}
         <motion.header
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-10"
+          transition={{ duration: 0.7, ease }}
+          className="mb-14"
         >
-          <div className="flex items-start justify-between">
+          <div className="flex items-end justify-between pb-6" style={{ borderBottom: "1px solid var(--w08)" }}>
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-2 h-8 bg-amber-500 rounded-full" />
-                <p className="text-xs tracking-[0.3em] text-amber-500 font-mono uppercase">
-                  Smart Delivery Route Finder
-                </p>
-              </div>
-              <h1 className="text-5xl font-display text-paper leading-none">
-                Route<span className="text-amber-500">Optimizer</span>
+              <p className="text-[10px] font-semibold tracking-[0.3em] uppercase mb-3" style={{ color: "var(--w30)" }}>
+                Smart Delivery Route Finder
+              </p>
+              <h1 className="text-[clamp(2.4rem,5vw,3.6rem)] font-extrabold leading-[0.95] tracking-tight">
+                Route<span style={{ color: "var(--w50)" }}>Forge</span>
               </h1>
-              <p className="text-sm text-paper/40 font-mono mt-2">
+              <p className="text-[11px] mt-2" style={{ color: "var(--w30)", fontFamily: "var(--font-mono)" }}>
                 Dijkstra · BFS · Brute Force — Surabaya District Graph
               </p>
             </div>
-            <div className="hidden md:flex items-center gap-2 text-xs font-mono text-paper/30">
-              <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
-              {graphData ? `${graphData.nodes.length} nodes · ${graphData.edges.length} edges` : "connecting..."}
+            <div className="hidden md:flex items-center gap-2 text-[11px]" style={{ color: "var(--w30)", fontFamily: "var(--font-mono)" }}>
+              <span className="w-[6px] h-[6px] rounded-full" style={{
+                background: graphData ? "var(--teal)" : "var(--red)",
+                boxShadow: graphData ? "0 0 8px rgba(62,207,180,0.4)" : "0 0 8px rgba(239,83,80,0.4)",
+              }} />
+              {graphData ? `${graphData.nodes.length} nodes · ${graphData.edges.length} edges` : "connecting…"}
             </div>
           </div>
         </motion.header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* ════ Grid ════ */}
+        <div className="grid gap-8 grid-main" style={{ gridTemplateColumns: "340px 1fr" }}>
 
-          {/* Left panel — controls */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
+          {/* ──── Left: Controls ──── */}
+          <motion.aside
+            initial={{ opacity: 0, x: -18 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="lg:col-span-1 space-y-4"
+            transition={{ duration: 0.6, delay: 0.08, ease }}
+            className="space-y-5"
           >
-            {/* Control card */}
-            <div className="rounded-2xl border border-amber-500/15 p-6 space-y-5"
-              style={{ background: "rgba(245,158,11,0.03)" }}>
-
-              <p className="text-xs tracking-widest text-amber-500 uppercase font-display">
+            <div className="panel-main rounded-2xl p-6 space-y-6">
+              <p className="text-[13px] font-bold tracking-wide" style={{ color: "var(--w70)" }}>
                 Route Configuration
               </p>
 
-              {/* Source */}
-              <div>
-                <label className="text-xs text-paper/40 font-mono block mb-2">
-                  ▸ Origin District
+              {/* Origin */}
+              <div className="reveal reveal-1">
+                <label className="text-[10px] font-semibold tracking-[0.14em] uppercase block mb-2" style={{ color: "var(--w30)" }}>
+                  Origin
                 </label>
-                <select
-                  value={source}
-                  onChange={(e) => setSource(e.target.value)}
-                  className="w-full bg-white/5 border border-amber-500/20 rounded-lg px-4 py-3 text-sm font-mono text-paper focus:outline-none focus:border-amber-500/60 transition-colors pr-8"
-                >
-                  {emptyGraph.nodes.map((n) => (
-                    <option key={n} value={n} className="bg-gray-900">{n}</option>
-                  ))}
+                <select value={source} onChange={(e) => setSource(e.target.value)}
+                  className="select-styled w-full rounded-lg px-4 py-3 text-[13px] font-medium transition-colors"
+                  style={{ background: "var(--w03)", border: "1px solid var(--w08)", color: "#fff", outline: "none" }}>
+                  {graph.nodes.map((n) => <option key={n} value={n}>{n}</option>)}
                 </select>
               </div>
 
-              {/* Swap button */}
-              <button
-                onClick={() => { const tmp = source; setSource(target); setTarget(tmp); }}
-                className="w-full flex items-center justify-center gap-2 py-2 text-xs text-paper/30 hover:text-amber-500 transition-colors font-mono"
-              >
-                ⇅ swap origin / destination
+              {/* Swap */}
+              <button onClick={() => { const t = source; setSource(target); setTarget(t); }}
+                className="w-full flex items-center justify-center gap-2 py-1 text-[10px] font-semibold tracking-wider transition-colors"
+                style={{ color: "var(--w15)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--w50)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--w15)")}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M7 4v16m0 0l-3-3m3 3l3-3M17 20V4m0 0l3 3m-3-3l-3 3" />
+                </svg>
+                SWAP
               </button>
 
-              {/* Target */}
-              <div>
-                <label className="text-xs text-paper/40 font-mono block mb-2">
-                  ▸ Destination District
+              {/* Destination */}
+              <div className="reveal reveal-2">
+                <label className="text-[10px] font-semibold tracking-[0.14em] uppercase block mb-2" style={{ color: "var(--w30)" }}>
+                  Destination
                 </label>
-                <select
-                  value={target}
-                  onChange={(e) => setTarget(e.target.value)}
-                  className="w-full bg-white/5 border border-teal-500/20 rounded-lg px-4 py-3 text-sm font-mono text-paper focus:outline-none focus:border-teal-500/60 transition-colors pr-8"
-                >
-                  {emptyGraph.nodes.map((n) => (
-                    <option key={n} value={n} className="bg-gray-900">{n}</option>
-                  ))}
+                <select value={target} onChange={(e) => setTarget(e.target.value)}
+                  className="select-styled w-full rounded-lg px-4 py-3 text-[13px] font-medium transition-colors"
+                  style={{ background: "var(--w03)", border: "1px solid var(--w08)", color: "#fff", outline: "none" }}>
+                  {graph.nodes.map((n) => <option key={n} value={n}>{n}</option>)}
                 </select>
               </div>
 
-              {/* Algorithm selector */}
-              <div>
-                <label className="text-xs text-paper/40 font-mono block mb-2">
-                  ▸ Algorithm
+              {/* Algorithm cards */}
+              <div className="reveal reveal-3">
+                <label className="text-[10px] font-semibold tracking-[0.14em] uppercase block mb-3" style={{ color: "var(--w30)" }}>
+                  Algorithm
                 </label>
                 <div className="space-y-2">
-                  {ALGO_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setAlgorithm(opt.value)}
-                      className="w-full flex items-center justify-between px-4 py-3 rounded-lg border text-left transition-all duration-200"
-                      style={{
-                        borderColor: algorithm === opt.value ? "#f59e0b" : "rgba(245,158,11,0.1)",
-                        background: algorithm === opt.value ? "rgba(245,158,11,0.1)" : "transparent",
-                      }}
-                    >
-                      <span className="text-sm font-mono text-paper">{opt.label}</span>
-                      <span className="text-xs font-mono text-paper/30">{opt.desc}</span>
-                    </button>
-                  ))}
+                  {ALGO_OPTIONS.map((opt) => {
+                    const on = algorithm === opt.value;
+                    return (
+                      <button key={opt.value} onClick={() => setAlgorithm(opt.value)}
+                        className={`algo-card w-full text-left rounded-xl px-4 py-3 ${on ? "algo-card-active" : ""}`}
+                        style={{
+                          background: on ? "var(--w05)" : "transparent",
+                          border: `1px solid ${on ? "var(--w30)" : "var(--w05)"}`,
+                        }}>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[13px] font-semibold" style={{ color: on ? "#fff" : "var(--w70)" }}>
+                            {opt.label}
+                          </span>
+                          <span className="text-[10px]" style={{ color: on ? "var(--w50)" : "var(--w15)", fontFamily: "var(--font-mono)" }}>
+                            {opt.cx}
+                          </span>
+                        </div>
+                        <p className="text-[11px] mt-0.5" style={{ color: "var(--w30)" }}>{opt.desc}</p>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Find Route button */}
-              <button
-                onClick={handleFind}
-                disabled={loading || !graphData}
-                className="w-full py-4 rounded-xl font-display text-sm tracking-widest uppercase transition-all duration-200 disabled:opacity-50"
-                style={{
-                  background: loading ? "rgba(245,158,11,0.3)" : "linear-gradient(135deg, #f59e0b, #d97706)",
-                  color: "#0a0a0f",
-                }}
-              >
-                {loading ? "Computing..." : "Find Shortest Route"}
-              </button>
-
-              {/* Compare all */}
-              <button
-                onClick={handleCompare}
-                disabled={comparing || !graphData}
-                className="w-full py-3 rounded-xl font-mono text-xs tracking-widest uppercase border border-teal-500/30 text-teal-400 hover:bg-teal-500/10 transition-all duration-200 disabled:opacity-50"
-              >
-                {comparing ? "Comparing..." : "Compare All Algorithms"}
-              </button>
+              {/* Actions */}
+              <div className="space-y-3 reveal reveal-4">
+                <button onClick={handleFind} disabled={loading || !graphData} className="btn-primary w-full">
+                  {loading ? "Computing…" : "Find Shortest Route"}
+                </button>
+                <button onClick={handleCompare} disabled={comparing || !graphData} className="btn-secondary w-full">
+                  {comparing ? "Comparing…" : "Compare All Algorithms"}
+                </button>
+              </div>
             </div>
 
-            {/* Result card */}
+            {/* ── Result card ── */}
             <AnimatePresence>
               {result && (
                 <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="rounded-2xl border border-amber-500/20 p-6 space-y-4"
-                  style={{ background: "rgba(245,158,11,0.05)" }}
+                  initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                  transition={{ duration: 0.4, ease }}
+                  className="panel-main rounded-2xl p-6 space-y-5"
                 >
-                  <p className="text-xs tracking-widest text-amber-500 uppercase font-display">
+                  <p className="text-[13px] font-bold tracking-wide" style={{ color: "var(--w70)" }}>
                     Route Result
                   </p>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-lg bg-white/5 p-3 text-center">
-                      <p className="text-2xl font-display text-amber-400">{result.distance_km}</p>
-                      <p className="text-xs text-paper/40 font-mono">km total</p>
+                    <div className="metric-tile metric-tile-white rounded-xl p-4 text-center" style={{ background: "var(--w03)" }}>
+                      <p className="text-[1.5rem] font-extrabold leading-none">{result.distance_km}</p>
+                      <p className="text-[10px] mt-1 font-medium" style={{ color: "var(--w30)" }}>km total</p>
                     </div>
-                    <div className="rounded-lg bg-white/5 p-3 text-center">
-                      <p className="text-2xl font-display text-teal-400">{result.hops}</p>
-                      <p className="text-xs text-paper/40 font-mono">stops</p>
-                    </div>
-                    <div className="col-span-2 rounded-lg bg-white/5 p-3 text-center">
-                      <p className="text-xl font-display text-paper">{result.execution_time_ms.toFixed(4)}</p>
-                      <p className="text-xs text-paper/40 font-mono">ms execution time</p>
+                    <div className="metric-tile metric-tile-teal rounded-xl p-4 text-center" style={{ background: "var(--w03)" }}>
+                      <p className="text-[1.5rem] font-extrabold leading-none" style={{ color: "var(--teal)" }}>{result.hops}</p>
+                      <p className="text-[10px] mt-1 font-medium" style={{ color: "var(--w30)" }}>stops</p>
                     </div>
                   </div>
 
-                  {/* Path sequence */}
+                  <div className="rounded-xl p-4 text-center" style={{ background: "var(--w03)" }}>
+                    <p className="text-[1.2rem] font-bold leading-none">
+                      {result.execution_time_ms.toFixed(4)}
+                      <span className="text-[10px] ml-1 font-normal" style={{ color: "var(--w30)", fontFamily: "var(--font-mono)" }}>ms</span>
+                    </p>
+                    <p className="text-[10px] mt-1 font-medium" style={{ color: "var(--w30)" }}>execution time</p>
+                  </div>
+
+                  {/* Path breadcrumb */}
                   <div>
-                    <p className="text-xs text-paper/40 font-mono mb-2">Route sequence:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {result.path.map((node, i) => (
-                        <span key={i} className="flex items-center gap-1">
-                          <span
-                            className="text-xs font-mono px-2 py-1 rounded"
-                            style={{
-                              background: i === 0 ? "rgba(245,158,11,0.3)"
-                                : i === result.path.length - 1 ? "rgba(20,184,166,0.3)"
-                                  : "rgba(245,240,232,0.1)",
-                              color: i === 0 ? "#fbbf24"
-                                : i === result.path.length - 1 ? "#2dd4bf"
-                                  : "#f5f0e8",
-                            }}
-                          >
-                            {node}
+                    <p className="text-[10px] font-semibold tracking-[0.1em] uppercase mb-2" style={{ color: "var(--w30)" }}>
+                      Route sequence
+                    </p>
+                    <div className="flex flex-wrap items-center gap-[6px]">
+                      {result.path.map((node, i) => {
+                        const first = i === 0;
+                        const last = i === result.path.length - 1;
+                        return (
+                          <span key={i} className="flex items-center gap-[6px]">
+                            <span className="text-[11px] font-semibold px-[10px] py-[5px] rounded-md"
+                              style={{
+                                fontFamily: "var(--font-mono)",
+                                background: first ? "var(--w15)" : last ? "var(--teal-dim)" : "var(--w05)",
+                                color: first ? "#fff" : last ? "var(--teal)" : "var(--w70)",
+                                border: `1px solid ${first ? "var(--w30)" : last ? "rgba(62,207,180,0.25)" : "transparent"}`,
+                              }}>
+                              {node}
+                            </span>
+                            {i < result.path.length - 1 && (
+                              <svg width="12" height="8" viewBox="0 0 12 8" fill="none" style={{ opacity: 0.2 }}>
+                                <path d="M0 4h10m0 0L7 1m3 3L7 7" stroke="#fff" strokeWidth="1" />
+                              </svg>
+                            )}
                           </span>
-                          {i < result.path.length - 1 && (
-                            <span className="text-amber-500/40 text-xs">→</span>
-                          )}
-                        </span>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </motion.div>
@@ -299,98 +256,73 @@ export default function Home() {
             </AnimatePresence>
 
             {/* Error */}
-            {error && (
-              <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4">
-                <p className="text-xs font-mono text-red-400">{error}</p>
-              </div>
-            )}
-          </motion.div>
+            <AnimatePresence>
+              {error && (
+                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                  className="rounded-xl p-4" style={{ background: "var(--red-dim)", border: "1px solid rgba(239,83,80,0.2)" }}>
+                  <p className="text-[11px] font-medium" style={{ color: "var(--red)" }}>{error}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.aside>
 
-          {/* Right panel — visualization */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
+          {/* ──── Right: Viz ──── */}
+          <motion.main
+            initial={{ opacity: 0, x: 18 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="lg:col-span-2 space-y-4"
+            transition={{ duration: 0.6, delay: 0.16, ease }}
+            className="space-y-5 min-w-0"
           >
             {/* Tabs */}
-            <div className="flex gap-2">
+            <div className="flex gap-1" style={{ borderBottom: "1px solid var(--w08)" }}>
               {(["map", "compare"] as const).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTab(t)}
-                  className="px-4 py-2 rounded-lg text-xs font-mono uppercase tracking-widest transition-all duration-200"
-                  style={{
-                    background: tab === t ? "rgba(245,158,11,0.2)" : "transparent",
-                    border: `1px solid ${tab === t ? "#f59e0b" : "rgba(245,158,11,0.15)"}`,
-                    color: tab === t ? "#fbbf24" : "rgba(245,240,232,0.4)",
-                  }}
-                >
-                  {t === "map" ? "▸ Route Map" : "▸ Algorithm Comparison"}
+                <button key={t} onClick={() => setTab(t)}
+                  className={`tab-btn ${tab === t ? "tab-active" : ""}`}>
+                  {t === "map" ? "Route Map" : "Algorithm Comparison"}
                 </button>
               ))}
             </div>
 
             <AnimatePresence mode="wait">
               {tab === "map" ? (
-                <motion.div
-                  key="map"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
+                <motion.div key="map" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}>
                   {graphData ? (
-                    <GraphCanvas
-                      graphData={graphData}
-                      path={result?.path || []}
-                      source={source}
-                      target={target}
-                    />
+                    <GraphCanvas graphData={graphData} path={result?.path || []} source={source} target={target} />
                   ) : (
-                    <div className="rounded-xl border border-amber-500/15 h-64 flex items-center justify-center">
-                      <p className="text-paper/30 font-mono text-sm">Connecting to backend...</p>
+                    <div className="graph-frame flex items-center justify-center" style={{ height: 300 }}>
+                      <p className="text-sm font-medium" style={{ color: "var(--w15)" }}>Connecting to backend…</p>
                     </div>
                   )}
 
-                  {/* How it works */}
                   {!result && (
-                    <div className="mt-4 rounded-xl border border-amber-500/10 p-5"
-                      style={{ background: "rgba(245,158,11,0.03)" }}>
-                      <p className="text-xs text-amber-500 font-mono mb-3 tracking-widest uppercase">How it works</p>
-                      <div className="grid grid-cols-3 gap-4">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+                      className="panel-main rounded-2xl p-6 mt-5">
+                      <p className="text-[13px] font-bold mb-5" style={{ color: "var(--w50)" }}>How it works</p>
+                      <div className="grid grid-cols-3 gap-6">
                         {[
-                          { step: "01", title: "Build Graph", desc: "Surabaya districts as nodes, roads as weighted edges" },
-                          { step: "02", title: "Run Algorithm", desc: "Dijkstra explores nodes by cumulative distance greedily" },
-                          { step: "03", title: "Trace Path", desc: "Backtrack from destination through predecessor map" },
+                          { n: "01", t: "Build Graph", d: "Surabaya districts become nodes; roads become weighted edges reflecting real distances." },
+                          { n: "02", t: "Run Algorithm", d: "Dijkstra greedily expands the frontier by cumulative cost via a min-priority queue." },
+                          { n: "03", t: "Trace Path", d: "Backtrack through the predecessor map from destination to source for the optimal route." },
                         ].map((item) => (
-                          <div key={item.step} className="space-y-2">
-                            <p className="text-xl font-display text-amber-500/30">{item.step}</p>
-                            <p className="text-xs font-mono text-paper/70">{item.title}</p>
-                            <p className="text-xs font-mono text-paper/30 leading-relaxed">{item.desc}</p>
+                          <div key={item.n}>
+                            <p className="text-[2rem] font-extrabold leading-none mb-2" style={{ color: "var(--w08)" }}>{item.n}</p>
+                            <p className="text-[12px] font-bold mb-1" style={{ color: "var(--w50)" }}>{item.t}</p>
+                            <p className="text-[11px] leading-relaxed" style={{ color: "var(--w30)" }}>{item.d}</p>
                           </div>
                         ))}
                       </div>
-                    </div>
+                    </motion.div>
                   )}
                 </motion.div>
               ) : (
-                <motion.div
-                  key="compare"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="rounded-2xl border border-amber-500/15 p-6"
-                  style={{ background: "rgba(245,158,11,0.03)" }}
-                >
+                <motion.div key="compare" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}
+                  className="panel-main rounded-2xl p-6">
                   {comparison ? (
                     <ComparisonPanel data={comparison} />
                   ) : (
-                    <div className="h-48 flex flex-col items-center justify-center gap-3">
-                      <p className="text-paper/30 font-mono text-sm">No comparison data yet.</p>
-                      <button
-                        onClick={handleCompare}
-                        className="text-xs font-mono text-teal-400 hover:text-teal-300 underline"
-                      >
+                    <div className="flex flex-col items-center justify-center py-16 gap-3">
+                      <p className="text-sm font-medium" style={{ color: "var(--w15)" }}>No comparison data yet.</p>
+                      <button onClick={handleCompare} className="text-[11px] font-semibold underline transition-colors" style={{ color: "var(--teal)" }}>
                         Run comparison now
                       </button>
                     </div>
@@ -399,24 +331,21 @@ export default function Home() {
               )}
             </AnimatePresence>
 
-            {/* Map also shows route on graph when comparison is done */}
             {tab === "compare" && graphData && result && (
-              <div>
-                <p className="text-xs text-paper/30 font-mono mb-2">Dijkstra optimal path on map:</p>
-                <GraphCanvas
-                  graphData={graphData}
-                  path={result.path}
-                  source={source}
-                  target={target}
-                />
+              <div className="mt-2">
+                <p className="text-[10px] font-semibold tracking-wide uppercase mb-3" style={{ color: "var(--w15)" }}>
+                  Dijkstra optimal path on map
+                </p>
+                <GraphCanvas graphData={graphData} path={result.path} source={source} target={target} />
               </div>
             )}
-          </motion.div>
+          </motion.main>
         </div>
 
         {/* Footer */}
-        <footer className="mt-12 text-center text-xs text-paper/20 font-mono">
-          EF234405 Design & Analysis of Algorithms — Quiz 2 · RouteForge
+        <footer className="mt-16 pt-6 text-center text-[10px] tracking-[0.08em] font-medium"
+          style={{ color: "var(--w15)", borderTop: "1px solid var(--w05)" }}>
+          EF234405 Design &amp; Analysis of Algorithms — Quiz 2 · RouteForge
         </footer>
       </div>
     </div>
