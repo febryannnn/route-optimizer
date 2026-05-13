@@ -11,22 +11,27 @@ CORS(app)
 # --- Graph definition ---
 # Nodes: real-ish city district names for Surabaya
 NODES = {
-    "Gubeng":        (0, 2),
-    "Wonokromo":     (1, 0),
-    "Rungkut":       (3, 1),
-    "Kenjeran":      (2, 4),
-    "Tambaksari":    (1, 3),
-    "Tegalsari":     (-1, 1),
-    "Sawahan":       (-1, -1),
-    "Dukuh Pakis":   (-2, 2),
-    "Sukomanunggal": (-3, 3),
-    "Benowo":        (-4, 1),
-    "Lakarsantri":   (-3, -1),
-    "Wiyung":        (-2, -2),
-    "Gayungan":      (0, -1),
-    "Wonocolo":      (1, -2),
-    "Tenggilis":     (3, -1),
-    "Sukolilo":      (4, 2),
+    "Gubeng":        (0.00,  2.00),
+    "Wonokromo":     (1.10,  0.10),
+    "Rungkut":       (3.05,  1.15),
+    "Kenjeran":      (2.15,  4.05),
+    "Tambaksari":    (1.20,  3.10),
+
+    "Tegalsari":     (-1.00,  1.05),
+    "Sawahan":       (-0.82, -1.12),
+
+    "Dukuh Pakis":   (-2.10,  2.08),
+
+    "Sukomanunggal": (-3.00,  3.12),
+    "Benowo":        (-4.15,  1.18),
+    "Lakarsantri":   (-2.78, -1.06),
+
+    "Wiyung":        (-1.92, -2.14),
+    "Gayungan":      (0.12, -2.05),
+    "Wonocolo":      (1.18, -1.82),
+
+    "Tenggilis":     (3.12, -0.88),
+    "Sukolilo":      (4.08,  2.18),
 }
 
 # Edges: (node1, node2, weight in km)
