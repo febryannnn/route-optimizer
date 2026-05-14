@@ -29,6 +29,7 @@ export interface RouteResult {
 export interface CompareResult {
   dijkstra: RouteResult;
   bfs: RouteResult;
+  dfs: RouteResult;
   brute_force: RouteResult;
 }
 
