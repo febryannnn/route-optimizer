@@ -39,6 +39,11 @@
   --sage-solid: #4a7860;
   --sage-text:  #f0fdf6;
 
+  --blue:       #526a96;
+  --blue-dark:  #3d537a;
+  --blue-solid: #465d86;
+  --blue-text:  #f3f7ff;
+
   /* ── Accent C: Terracotta  (Brute Force · Warning) */
   --terra:       #9c5a45;
   --terra-dark:  #7a4233;
@@ -249,6 +254,7 @@ body {
 }
 .algo-card-dijkstra.algo-card-active { background: rgba(192,144,96,0.06); border-color: rgba(192,144,96,0.3); }
 .algo-card-bfs.algo-card-active      { background: rgba(91,136,112,0.06); border-color: rgba(91,136,112,0.3); }
+.algo-card-dfs.algo-card-active      { background: rgba(82,106,150,0.06); border-color: rgba(82,106,150,0.3); }
 .algo-card-brute.algo-card-active    { background: rgba(156,90,69,0.06); border-color: rgba(156,90,69,0.3); }
 
 /* ─── Metric tile accent line ─── */
@@ -312,6 +318,7 @@ body {
 }
 .badge-sand    { background: var(--sand);  color: #fff; }
 .badge-sage    { background: var(--sage);  color: #fff; }
+.badge-blue    { background: var(--blue);  color: #fff; }
 .badge-terra   { background: var(--terra); color: #fff; }
 .badge-neutral {
   background: var(--bg-elevated);

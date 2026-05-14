@@ -37,6 +37,14 @@ const ALGO_OPTIONS = [
     badge: "badge-sage",
   },
   {
+    value: "dfs",
+    label: "DFS",
+    desc: "Depth-first path exploration",
+    cx: "O(V+E)",
+    color: "var(--blue)",
+    badge: "badge-blue",
+  },
+  {
     value: "brute_force",
     label: "Brute Force",
     desc: "Exhaustive all-paths search",
@@ -157,7 +165,7 @@ export default function Home() {
                 Route<span className="text-[var(--sand)]">Forge</span>
               </h1>
               <p className="text-[12px] mt-2.5 text-[var(--text-muted)] font-mono">
-                Dijkstra · BFS · Brute Force — Surabaya Districts
+                Dijkstra · BFS · DFS · Brute Force — Surabaya Districts
               </p>
             </div>
 
@@ -251,7 +259,14 @@ export default function Home() {
                 <div className="flex flex-col gap-[7px]">
                   {ALGO_OPTIONS.map((opt) => {
                     const on = algorithm === opt.value;
-                    const cardClass = opt.value === 'dijkstra' ? 'algo-card-dijkstra' : opt.value === 'bfs' ? 'algo-card-bfs' : 'algo-card-brute';
+                    const cardClass =
+                      opt.value === "dijkstra"
+                        ? "algo-card-dijkstra"
+                        : opt.value === "bfs"
+                          ? "algo-card-bfs"
+                          : opt.value === "dfs"
+                            ? "algo-card-dfs"
+                            : "algo-card-brute";
                     return (
                       <button
                         key={opt.value}

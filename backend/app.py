@@ -127,6 +127,29 @@ def bfs_shortest(graph, source, target):
 
     return best_path or [], best_dist
 
+def dfs_route(graph, source, target):
+    """Depth-first traversal: returns the first simple path found."""
+    visited = set()
+
+    def visit(node, path, dist):
+        if node == target:
+            return path, dist
+
+        visited.add(node)
+        for neighbor, weight in graph[node]:
+            if neighbor not in visited:
+                result_path, result_dist = visit(
+                    neighbor,
+                    path + [neighbor],
+                    dist + weight,
+                )
+                if result_path:
+                    return result_path, result_dist
+
+        return [], float('inf')
+
+    return visit(source, [source], 0.0)
+
 def brute_force(graph, source, target):
     """Try all simple paths, return shortest. Very slow for large graphs."""
     from collections import defaultdict
@@ -199,6 +222,8 @@ def get_route():
         path, distance = dijkstra(GRAPH, source, target)
     elif algorithm == 'bfs':
         path, distance = bfs_shortest(GRAPH, source, target)
+    elif algorithm == 'dfs':
+        path, distance = dfs_route(GRAPH, source, target)
     elif algorithm == 'brute_force':
         path, distance = brute_force(GRAPH, source, target)
     else:
@@ -226,12 +251,14 @@ def compare_algorithms():
         return jsonify({"error": "Invalid nodes"}), 400
 
     results = {}
-    for algo in ['dijkstra', 'bfs', 'brute_force']:
+    for algo in ['dijkstra', 'bfs', 'dfs', 'brute_force']:
         t0 = time.perf_counter()
         if algo == 'dijkstra':
             path, dist = dijkstra(GRAPH, source, target)
         elif algo == 'bfs':
             path, dist = bfs_shortest(GRAPH, source, target)
+        elif algo == 'dfs':
+            path, dist = dfs_route(GRAPH, source, target)
         else:
             path, dist = brute_force(GRAPH, source, target)
         elapsed = (time.perf_counter() - t0) * 1000

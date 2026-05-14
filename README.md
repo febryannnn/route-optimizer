@@ -6,6 +6,7 @@ A web application that finds the shortest delivery route between districts in Su
 ## Algorithms Implemented
 - **Dijkstra** — Optimal shortest path using a min-heap priority queue. O((V+E) log V).
 - **BFS** — Breadth-first search adapted for weighted shortest path.
+- **DFS** — Depth-first traversal that returns the first valid route found. O(V+E).
 - **Brute Force** — DFS over all simple paths, exponential complexity for baseline comparison.
 
 ## Tech Stack
@@ -57,7 +58,7 @@ Then open http://localhost:3000 in your browser.
 |----------|--------|-------------|
 | `/api/nodes` | GET | Returns all graph nodes, positions, and edges |
 | `/api/route` | POST | Find shortest path with given algorithm |
-| `/api/compare` | POST | Compare all 3 algorithms side-by-side |
+| `/api/compare` | POST | Compare all 4 algorithms side-by-side |
 
 ### Example `/api/route` request:
 ```json
@@ -91,4 +92,5 @@ The graph models 16 districts in Surabaya with 29 weighted edges (road distances
 |-----------|------|-------|----------|
 | Dijkstra | O((V+E) log V) | O(V) | ✓ Yes |
 | BFS | O(V+E) | O(V) | ✗ (unweighted only) |
+| DFS | O(V+E) | O(V) | ✗ |
 | Brute Force | O(V!) | O(V) | ✓ Yes but slow |

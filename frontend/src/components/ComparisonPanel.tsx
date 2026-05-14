@@ -29,6 +29,12 @@ const META: Record<
     text:  "var(--sage-text)",
     badge: "badge-sage",
   },
+  dfs: {
+    label: "DFS",
+    solid: "var(--blue-solid)",
+    text:  "var(--blue-text)",
+    badge: "badge-blue",
+  },
   brute_force: {
     label: "Brute Force",
     solid: "var(--terra-solid)",
@@ -52,7 +58,7 @@ export default function ComparisonPanel({ data }: ComparisonPanelProps) {
         <p className="text-[13px] font-bold text-[var(--text-main)]">
           Algorithm Comparison
         </p>
-        <span className="badge badge-neutral">3 algorithms</span>
+        <span className="badge badge-neutral">4 algorithms</span>
       </div>
 
       {/* ══ Execution Time ══ */}
@@ -122,7 +128,7 @@ export default function ComparisonPanel({ data }: ComparisonPanelProps) {
 
       {/* ══ Hops ══ */}
       <Section label="Hops (Stops)">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {algos.map((algo, i) => {
             const m = META[algo];
             return (
@@ -163,6 +169,7 @@ export default function ComparisonPanel({ data }: ComparisonPanelProps) {
             O((V+E) log V)
           </code>.{" "}
           <span className="font-bold text-[var(--terra)]">Brute Force</span> is correct but explores every path — exponential cost.{" "}
+          <span className="font-bold text-[var(--blue)]">DFS</span> follows one branch deeply and returns the first valid route.{" "}
           <span className="font-bold text-[var(--sage)]">BFS</span> minimises hops while ignoring road weights.
         </p>
       </motion.div>
