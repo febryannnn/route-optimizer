@@ -162,7 +162,7 @@ export default function Home() {
                 Smart Delivery · Route Optimization
               </p>
               <h1 className="text-title">
-                Route<span className="text-[var(--sand)]">Forge</span>
+                Route<span className="text-[var(--sand)]">Finder</span>
               </h1>
               <p className="text-[12px] mt-2.5 text-[var(--text-muted)] font-mono">
                 Dijkstra · BFS · DFS · Brute Force — Surabaya Districts
