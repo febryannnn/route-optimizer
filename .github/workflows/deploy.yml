@@ -64,8 +64,6 @@ jobs:
           script: |
             cd /var/www/app
 
-            docker compose pull
+            sudo docker compose pull
 
-            docker compose up -d
-
-            docker image prune -f
+            sudo docker compose up -d
