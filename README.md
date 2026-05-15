@@ -1,13 +1,13 @@
 # RouteFinder Analytics
-**EF234405 Design & Analysis of Algorithms — Quiz 2**
+**EF234405 Design & Analysis of Algorithms - Quiz 2**
 
 A web application that finds the shortest delivery route between districts in Surabaya using graph algorithms.
 
 ## Algorithms Implemented
-- **Dijkstra** — Optimal shortest path using a min-heap priority queue. O((V+E) log V).
-- **BFS** — Breadth-first search adapted for weighted shortest path.
-- **DFS** — Depth-first traversal that returns the first valid route found. O(V+E).
-- **Brute Force** — DFS over all simple paths, exponential complexity for baseline comparison.
+- **Dijkstra** : Optimal shortest path using a min-heap priority queue. O((V+E) log V).
+- **BFS** : Breadth-first search adapted for weighted shortest path.
+- **DFS** : Depth-first traversal that returns the first valid route found. O(V+E).
+- **Brute Force** : DFS over all simple paths, exponential complexity for baseline comparison.
 
 ## Tech Stack
 - **Backend**: Python + Flask (REST API)
