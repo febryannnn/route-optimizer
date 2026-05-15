@@ -26,6 +26,7 @@ jobs:
       - name: Build Frontend
         run: |
           docker build \
+            --build-arg NEXT_PUBLIC_API_URL=${{ secrets.VPS_HOST }}:5000 \
             -t ${{ secrets.DOCKER_USERNAME }}/frontend:latest \
             ./frontend
 
