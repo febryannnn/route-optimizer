@@ -1,4 +1,4 @@
-# RouteForge — Smart Delivery Route Finder
+# RouteFinder Analytics
 **EF234405 Design & Analysis of Algorithms — Quiz 2**
 
 A web application that finds the shortest delivery route between districts in Surabaya using graph algorithms.
